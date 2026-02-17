@@ -4,19 +4,174 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Rubin Mini App</title>
+
   <style>
-    body { font-family: Arial, sans-serif; padding: 16px; }
-    .card { border: 1px solid #ddd; border-radius: 12px; padding: 12px; margin-top: 12px; }
-    button { padding: 10px 14px; border-radius: 10px; border: 0; cursor: pointer; }
+    :root{
+      --bg:#0f172a;
+      --card:#111827;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --border:rgba(255,255,255,.10);
+      --shadow: 0 14px 40px rgba(0,0,0,.35);
+      --radius: 18px;
+      --btn:#ffffff;
+      --btnText:#111827;
+    }
+
+    body{
+      margin:0;
+      padding:18px;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .wrap{ max-width: 520px; margin: 0 auto; }
+
+    .hero{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:14px; margin-bottom:14px;
+    }
+
+    .title{
+      display:flex; flex-direction:column; gap:6px;
+    }
+
+    .title h1{
+      font-size:22px; margin:0; letter-spacing:.2px;
+    }
+
+    .subtitle{
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .crown{
+      font-size: 26px;
+      filter: drop-shadow(0 10px 20px rgba(0,0,0,.35));
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      margin-top: 12px;
+    }
+
+    .row{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+      margin-top: 10px;
+    }
+
+    .pill{
+      display:inline-flex;
+      gap:8px; align-items:center;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--text);
+      background: rgba(255,255,255,.03);
+      font-size: 13px;
+    }
+
+    .pill b{ font-weight: 600; }
+
+    .hint{
+      color: var(--muted);
+      font-size: 13px;
+      margin: 10px 0 0;
+      line-height: 1.4;
+    }
+
+    .actions{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-top: 12px;
+    }
+
+    button{
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 12px;
+      font-size: 14px;
+      font-weight: 650;
+      cursor: pointer;
+      transition: transform .06s ease, opacity .15s ease;
+    }
+
+    button:active{ transform: scale(.99); opacity: .92; }
+
+    .primary{
+      background: var(--btn);
+      color: var(--btnText);
+    }
+
+    .ghost{
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      border: 1px solid var(--border);
+      font-weight: 600;
+    }
+
+    .footer{
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align:center;
+    }
+
+    /* Light theme (если Telegram светлый) */
+    .light{
+      --bg:#f3f4f6;
+      --card:#ffffff;
+      --text:#111827;
+      --muted:#6b7280;
+      --border:rgba(17,24,39,.12);
+      --shadow: 0 14px 40px rgba(17,24,39,.10);
+      --btn:#111827;
+      --btnText:#ffffff;
+    }
   </style>
 </head>
-<body>
-  <h2>Мини-приложение Рубина 👑</h2>
 
-  <div class="card">
-    <div id="user">Загрузка...</div>
-    <p>Нажми кнопку — данные уйдут боту.</p>
-    <button id="send">Отправить в бота</button>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div class="title">
+        <h1>Мини-приложение Рубина</h1>
+        <div class="subtitle">Панель управления ботом. Нажми кнопку — данные уйдут боту.</div>
+      </div>
+      <div class="crown">👑</div>
+    </div>
+
+    <div class="card">
+      <div id="userPills" class="row">
+        <span class="pill">⏳ <b>Загрузка…</b></span>
+      </div>
+
+      <p class="hint">
+        Можно отправить боту событие из Mini App. Бот получит данные и ответит в чате.
+      </p>
+
+      <div class="actions">
+        <button class="primary" id="sendHello">Отправить в бота</button>
+        <button class="ghost" id="closeApp">Закрыть</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="subtitle">Быстрые действия</div>
+      <div class="actions" style="margin-top:10px">
+        <button class="ghost" id="sendWhoami">Кто я</button>
+        <button class="ghost" id="sendRules">Правила</button>
+      </div>
+    </div>
+
+    <div class="footer">Rubin Mini App · GitHub Pages</div>
   </div>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -24,14 +179,49 @@
     const tg = window.Telegram.WebApp;
     tg.ready();
 
-    const u = tg.initDataUnsafe?.user;
-    document.getElementById("user").textContent =
-      u ? `Ты: ${u.first_name} (@${u.username || "-"})` : "Открой из Telegram 😄";
+    // Тема под Telegram
+    const cs = tg.colorScheme; // "light" | "dark"
+    if (cs === "light") document.body.classList.add("light");
 
-    document.getElementById("send").onclick = () => {
-      tg.sendData(JSON.stringify({ action: "hello", time: Date.now() }));
-      tg.close(); // закрыть мини-апп после отправки
+    // Покажем пользователя
+    const u = tg.initDataUnsafe?.user;
+    const userPills = document.getElementById("userPills");
+
+    function pill(icon, label){
+      const el = document.createElement("span");
+      el.className = "pill";
+      el.innerHTML = `${icon} <b>${label}</b>`;
+      return el;
+    }
+
+    userPills.innerHTML = "";
+    if (u){
+      userPills.appendChild(pill("🙂", `${u.first_name}${u.last_name ? " " + u.last_name : ""}`));
+      userPills.appendChild(pill("🆔", String(u.id)));
+      userPills.appendChild(pill("🏷️", u.username ? "@"+u.username : "без username"));
+    } else {
+      userPills.appendChild(pill("⚠️", "Открой из Telegram"));
+    }
+
+    function send(payload){
+      tg.sendData(JSON.stringify(payload));
+      // можно не закрывать, но так приятнее
+      tg.close();
+    }
+
+    document.getElementById("sendHello").onclick = () => {
+      send({ action: "hello", time: Date.now() });
     };
+
+    document.getElementById("sendWhoami").onclick = () => {
+      send({ action: "whoami", time: Date.now() });
+    };
+
+    document.getElementById("sendRules").onclick = () => {
+      send({ action: "rules", time: Date.now() });
+    };
+
+    document.getElementById("closeApp").onclick = () => tg.close();
   </script>
 </body>
 </html>
