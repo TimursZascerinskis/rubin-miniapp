@@ -203,11 +203,15 @@
       userPills.appendChild(pill("⚠️", "Открой из Telegram"));
     }
 
-    function send(payload){
-      tg.sendData(JSON.stringify(payload));
-      // можно не закрывать, но так приятнее
-      tg.close();
-    }
+function send(payload){
+  try {
+    tg.sendData(JSON.stringify(payload));
+    alert("Отправлено ✅");   // покажет, что клик сработал
+  } catch (e) {
+    alert("Ошибка отправки: " + e);
+  }
+}
+
 
     document.getElementById("sendHello").onclick = () => {
       send({ action: "hello", time: Date.now() });
